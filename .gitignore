@@ -1,0 +1,24 @@
+# Gradle and build artifacts
+.gradle/
+build/
+app/build/
+.kotlin/
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.codex
+
+# Local configuration
+local.properties
+capture/
+screenshots/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project-specific logs
+*.log
