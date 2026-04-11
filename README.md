@@ -6,7 +6,6 @@ CricketWatch is a lightweight, "glance-focused" Wear OS application designed for
 
 - **Glanceable Scores**: Optimized for small screens, providing immediate access to current scores, wickets, and overs.
 - **Team-Specific Filtering**: Automatically filters for England and Surrey senior matches, excluding youth (U19) and irrelevant fixtures to keep your feed focused.
-- **Batting Indicators**: Highlights the current batting team in **Cyan** with a `*` indicator for easy status checking at a glance.
 - **Rotary/Crown Support**: Smooth scrolling through match lists using the physical watch crown or rotary input.
 - **Live Updates**: Automatic background refreshing every 60 seconds with "Last Updated" timestamps.
 - **Clean UI**: Automatically strips technical codenames (e.g., `[LEICS]`) from team names for a more professional look.
@@ -26,23 +25,24 @@ CricketWatch is a lightweight, "glance-focused" Wear OS application designed for
 - A Wear OS device or emulator (API 30+).
 
 ### Configuration
-The app requires a `cricapi.com` API key. Currently, this is hardcoded in `MainActivity.kt` for development purposes.
+The app requires a `cricapi.com` API key. For security, this is managed via `local.properties`:
+
+1.  Open or create `local.properties` in the project root.
+2.  Add your API key: `CRICKET_API_KEY=your_key_here`.
+3.  The build system will automatically inject this into the app via `BuildConfig`.
 
 ### Building
 ```bash
 ./gradlew assembleDebug
 ```
 
-## Performance Optimizations
-
-- **Parallel Fetching**: Hits multiple API endpoints (`currentMatches` and `cricScore`) concurrently to reduce wait times.
-- **Thread Safety**: All networking and parsing operations are strictly offloaded to `Dispatchers.IO`.
-- **Memory Efficient**: Streamlined to a single-screen experience to minimize resource usage on wearable hardware.
-
 ## Project Structure
 - `CricketRepository`: Handles data fetching, parallelization, and exclusionary filtering.
 - `CricketViewModel`: Manages the UI state and periodic refresh logic.
 - `Screens.kt`: Contains the `MatchListScreen` and `MatchCard` components optimized for Wear OS.
 
+## Licence
+This project is licensed under the GNU General Public License v3.0 or later (GPL-3.0-or-later).
+
 ---
-*Developed by Ned Richards*
+*Co-authored with a bunch of different AIs*
