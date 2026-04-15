@@ -66,7 +66,7 @@ class CricketRepository(private val apiKey: String) {
                                 venue = null,
                                 date = null,
                                 teams = listOf(cleanName(cs.t1), cleanName(cs.t2)),
-                                score = parseCricScore(cs.t1s, cs.t2s),
+                                score = parseCricScore(cs.t1, cs.t1s, cs.t2, cs.t2s),
                                 series_id = null,
                                 matchStarted = cs.ms != "fixture",
                                 matchEnded = cs.ms == "result"
@@ -95,10 +95,15 @@ class CricketRepository(private val apiKey: String) {
         }
     }
 
-    private fun parseCricScore(t1s: String?, t2s: String?): List<ScoreSummary>? {
+    private fun parseCricScore(
+        t1: String,
+        t1s: String?,
+        t2: String,
+        t2s: String?
+    ): List<ScoreSummary>? {
         val scores = mutableListOf<ScoreSummary>()
         
-        fun parse(s: String?, inning: String) {
+        fun parse(team: String, s: String?) {
             if (s.isNullOrBlank()) return
             // Example: "181/4 (20)" or "31/1 (9.3)"
             try {
@@ -111,14 +116,14 @@ class CricketRepository(private val apiKey: String) {
                 val w = rw.getOrNull(1)?.toInt() ?: 0
                 val o = overPart?.toDoubleOrNull() ?: 0.0
                 
-                scores.add(ScoreSummary(r, w, o, inning))
+                scores.add(ScoreSummary(r, w, o, "${cleanName(team)} Inning 1"))
             } catch (_: Exception) {
                 // Ignore parsing errors
             }
         }
 
-        parse(t1s, "Inning 1")
-        parse(t2s, "Inning 2")
+        parse(t1, t1s)
+        parse(t2, t2s)
         
         return if (scores.isEmpty()) null else scores
     }

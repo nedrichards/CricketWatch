@@ -4,7 +4,7 @@ CricketWatch is a lightweight, "glance-focused" Wear OS application designed for
 
 ## Features
 
-- **Glanceable Scores**: Optimized for small screens, providing immediate access to current scores, wickets, and overs.
+- **Glanceable Scores**: Team-first score rows with compact abbreviations, aligned runs/wickets, overs, and an active batting marker for fast reading on a watch.
 - **Team-Specific Filtering**: Automatically filters for England and Surrey senior matches, excluding youth (U19) and irrelevant fixtures to keep your feed focused.
 - **Rotary/Crown Support**: Smooth scrolling through match lists using the physical watch crown or rotary input.
 - **Live Updates**: Automatic background refreshing every 60 seconds with "Last Updated" timestamps.
