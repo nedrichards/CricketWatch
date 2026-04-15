@@ -1,7 +1,6 @@
 package com.nedrichards.cricketwatch
 
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,7 +17,6 @@ import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.*
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -27,9 +25,8 @@ fun MatchListScreen(
     state: CricketUiState,
     onRefresh: () -> Unit
 ) {
-    val listState = rememberScalingLazyListState()
+    val listState = rememberScalingLazyListState(initialCenterItemIndex = 0)
     val focusRequester = remember { FocusRequester() }
-    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         timeText = { TimeText() },
@@ -62,9 +59,7 @@ fun MatchListScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .onRotaryScrollEvent {
-                            coroutineScope.launch {
-                                listState.scrollBy(it.verticalScrollPixels)
-                            }
+                            listState.dispatchRawDelta(it.verticalScrollPixels)
                             true
                         }
                         .focusRequester(focusRequester)
@@ -85,7 +80,7 @@ fun MatchListScreen(
                             )
                         }
                     } else {
-                        items(state.matches) { match ->
+                        items(state.matches, key = { it.id }) { match ->
                             MatchCard(match)
                         }
                     }

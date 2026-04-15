@@ -4,6 +4,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 sealed class CricketUiState {
@@ -19,10 +20,17 @@ class CricketViewModel(private val repository: CricketRepository) : ViewModel() 
 
     private val _uiState = mutableStateOf<CricketUiState>(CricketUiState.Loading)
     val uiState: State<CricketUiState> = _uiState
+    private var loadJob: Job? = null
 
     fun loadMatches() {
-        viewModelScope.launch {
-            _uiState.value = CricketUiState.Loading
+        if (loadJob?.isActive == true) return
+
+        val previousState = _uiState.value
+        loadJob = viewModelScope.launch {
+            if (previousState !is CricketUiState.Success) {
+                _uiState.value = CricketUiState.Loading
+            }
+
             try {
                 val matches = repository.getRelevantMatches()
                 _uiState.value = CricketUiState.Success(
@@ -30,7 +38,11 @@ class CricketViewModel(private val repository: CricketRepository) : ViewModel() 
                     lastUpdated = System.currentTimeMillis()
                 )
             } catch (e: Exception) {
-                _uiState.value = CricketUiState.Error(e.message ?: "Unknown error")
+                _uiState.value = if (previousState is CricketUiState.Success) {
+                    previousState
+                } else {
+                    CricketUiState.Error(e.message ?: "Unknown error")
+                }
             }
         }
     }
