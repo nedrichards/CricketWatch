@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.nedrichards.cricketwatch"
-    compileSdk = 34
+    compileSdk = 36
 
     val localProperties = Properties()
     val localPropertiesFile = rootProject.file("local.properties")
@@ -51,17 +51,19 @@ dependencies {
     implementation("androidx.percentlayout:percentlayout:1.0.0")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+
+    implementation(platform("androidx.compose:compose-bom:2026.04.01"))
     
     // Compose for Wear OS
-    implementation("androidx.wear.compose:compose-material:1.2.1")
-    implementation("androidx.wear.compose:compose-foundation:1.2.1")
-    implementation("androidx.wear.compose:compose-navigation:1.2.1")
+    implementation("androidx.wear.compose:compose-material:1.6.1")
+    implementation("androidx.wear.compose:compose-foundation:1.6.1")
+    implementation("androidx.wear.compose:compose-navigation:1.6.1")
     
     // Core Compose
-    implementation("androidx.compose.ui:ui:1.5.4")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.5.4")
-    implementation("androidx.activity:activity-compose:1.8.1")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.activity:activity-compose:1.13.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
     
     // Networking
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
