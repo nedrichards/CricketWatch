@@ -6,7 +6,7 @@ import java.util.Locale
 @Immutable
 data class MatchCardModel(
     val id: String,
-    val name: String,
+    val title: String,
     val status: String?,
     val scoreRows: List<DisplayScoreModel>
 )
@@ -22,7 +22,7 @@ data class DisplayScoreModel(
 fun MatchSummary.toMatchCardModel(): MatchCardModel =
     MatchCardModel(
         id = id,
-        name = name,
+        title = name.compactMatchTitle(),
         status = status,
         scoreRows = buildDisplayScoreRows()
     )
@@ -68,10 +68,46 @@ private fun String.shortTeamName(): String {
         .take(5)
 }
 
+private fun String.compactMatchTitle(): String {
+    val parts = split(",")
+        .map(String::trim)
+        .filter(String::isNotBlank)
+
+    if (parts.isEmpty()) return this
+    if (parts.size == 1) return parts.first().removeTrailingYear().normalizeCompetitionName()
+
+    val teams = parts.first()
+    val competitionParts = parts.drop(1)
+        .filterNot(String::isMatchNumberLabel)
+        .map(String::removeTrailingYear)
+        .map(String::normalizeCompetitionName)
+        .filter(String::isNotBlank)
+
+    return when {
+        competitionParts.isEmpty() -> teams
+        competitionParts.first().equals(teams, ignoreCase = true) -> teams
+        else -> "$teams, ${competitionParts.joinToString(", ")}"
+    }
+}
+
+private fun String.isMatchNumberLabel(): Boolean =
+    MATCH_NUMBER_REGEX.matches(this)
+
+private fun String.removeTrailingYear(): String =
+    replace(TRAILING_YEAR_REGEX, "").trim().trimEnd(',', '-').trim()
+
+private fun String.normalizeCompetitionName(): String =
+    replace(COMPETITION_SUFFIX_REGEX, "").trim().trimEnd(',', '-').trim()
+
 private fun Double.formatOvers(): String =
     if (rem(1.0) == 0.0) toInt().toString() else toString()
 
 private val BRACKETED_TEAM_REGEX = Regex("\\[(.+?)]")
 private val NON_ALPHANUMERIC_TEAM_REGEX = Regex("[^A-Za-z0-9 ]")
 private val WHITESPACE_REGEX = Regex("\\s+")
+private val MATCH_NUMBER_REGEX =
+    Regex("(?i)^((\\d+)(st|nd|rd|th)\\s+match|match\\s+\\d+|\\d+(st|nd|rd|th)\\s+test|\\d+(st|nd|rd|th)\\s+odi|\\d+(st|nd|rd|th)\\s+t20i?)$")
+private val TRAILING_YEAR_REGEX = Regex("""(?:,?\s+)?\b(19|20)\d{2}\b$""")
+private val COMPETITION_SUFFIX_REGEX =
+    Regex("""(?i)(?:^|\s+)(division\s+(one|two|three)|north\s+group|south\s+group|group\s+[a-z0-9]+)$""")
 private val TEAM_STOP_WORDS = setOf("cricket", "club", "of", "the")

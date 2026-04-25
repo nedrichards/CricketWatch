@@ -124,7 +124,7 @@ fun MatchCard(match: MatchCardModel) {
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
-                match.name,
+                match.title,
                 style = MaterialTheme.typography.caption1,
                 fontWeight = FontWeight.Bold,
                 maxLines = 2,
@@ -148,8 +148,6 @@ fun MatchCard(match: MatchCardModel) {
 
 @Composable
 private fun ScoreRow(score: DisplayScoreModel) {
-    val rowColor = if (score.isBatting) Color.Cyan else Color.White
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -157,30 +155,29 @@ private fun ScoreRow(score: DisplayScoreModel) {
         Text(
             text = score.shortTeam,
             style = MaterialTheme.typography.caption2,
-            color = rowColor,
-            fontWeight = if (score.isBatting) FontWeight.Bold else FontWeight.Normal,
+            color = Color.White,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(0.28f)
+            modifier = Modifier.weight(0.24f)
         )
         Text(
             text = score.score,
-            style = MaterialTheme.typography.caption1,
-            color = rowColor,
+            style = MaterialTheme.typography.caption2,
+            color = Color.White,
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
-            textAlign = TextAlign.End,
-            modifier = Modifier.weight(0.38f)
+            textAlign = TextAlign.Start,
+            modifier = Modifier.weight(0.46f)
         )
         Text(
-            text = "${score.overs} ov${if (score.isBatting) " *" else ""}",
+            text = score.overs + if (score.isBatting) "*" else "",
             style = MaterialTheme.typography.caption2,
-            color = rowColor,
+            color = Color.White,
             fontFamily = FontFamily.Monospace,
             maxLines = 1,
             textAlign = TextAlign.End,
-            modifier = Modifier.weight(0.34f)
+            modifier = Modifier.weight(0.30f)
         )
     }
 }

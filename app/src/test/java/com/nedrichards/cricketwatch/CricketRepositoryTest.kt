@@ -115,4 +115,64 @@ class CricketRepositoryTest {
 
         assertEquals("ENG-W", model.scoreRows.single().shortTeam)
     }
+
+    @Test
+    fun testMatchCardModelDropsOrdinalMatchLabelButKeepsCompetition() {
+        val model = MatchSummary(
+            id = "3",
+            name = "Surrey vs Essex, 15th Match, County Championship Division One 2026",
+            matchType = null,
+            status = null,
+            venue = null,
+            date = null,
+            teams = listOf("Surrey", "Essex"),
+            score = null,
+            series_id = null,
+            matchStarted = true,
+            matchEnded = false
+        ).toMatchCardModel()
+
+        assertEquals(
+            "Surrey vs Essex, County Championship",
+            model.title
+        )
+    }
+
+    @Test
+    fun testMatchCardModelRemovesTrailingYearFromCompetitionOnlyTitle() {
+        val model = MatchSummary(
+            id = "4",
+            name = "County Championship Division One 2026",
+            matchType = null,
+            status = null,
+            venue = null,
+            date = null,
+            teams = listOf("Surrey", "Essex"),
+            score = null,
+            series_id = null,
+            matchStarted = false,
+            matchEnded = false
+        ).toMatchCardModel()
+
+        assertEquals("County Championship", model.title)
+    }
+
+    @Test
+    fun testMatchCardModelKeepsCompetitionFamilyForBlastMatches() {
+        val model = MatchSummary(
+            id = "5",
+            name = "Surrey vs Kent, South Group, Vitality Blast 2026",
+            matchType = null,
+            status = null,
+            venue = null,
+            date = null,
+            teams = listOf("Surrey", "Kent"),
+            score = null,
+            series_id = null,
+            matchStarted = false,
+            matchEnded = false
+        ).toMatchCardModel()
+
+        assertEquals("Surrey vs Kent, Vitality Blast", model.title)
+    }
 }
