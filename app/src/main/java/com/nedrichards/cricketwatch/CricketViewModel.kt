@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 sealed class CricketUiState {
     object Loading : CricketUiState()
     data class Success(
-        val matches: List<MatchSummary>,
+        val matches: List<MatchCardModel>,
         val lastUpdated: Long = System.currentTimeMillis()
     ) : CricketUiState()
     data class Error(val message: String) : CricketUiState()
@@ -33,6 +33,7 @@ class CricketViewModel(private val repository: CricketRepository) : ViewModel() 
 
             try {
                 val matches = repository.getRelevantMatches()
+                    .map(MatchSummary::toMatchCardModel)
                 _uiState.value = CricketUiState.Success(
                     matches = matches,
                     lastUpdated = System.currentTimeMillis()

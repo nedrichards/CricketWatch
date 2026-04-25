@@ -66,4 +66,53 @@ class CricketRepositoryTest {
 
         assertEquals("1", sorted.first().id)
     }
+
+    @Test
+    fun testMatchCardModelPrecomputesScoreRows() {
+        val model = MatchSummary(
+            id = "1",
+            name = "Surrey vs Kent",
+            matchType = null,
+            status = "Surrey need 42",
+            venue = null,
+            date = null,
+            teams = listOf("Surrey", "Kent"),
+            score = listOf(
+                ScoreSummary(r = 245, w = 8, o = 50.0, inning = "Surrey Inning 1"),
+                ScoreSummary(r = 203, w = 4, o = 44.3, inning = "Kent Inning 1")
+            ),
+            series_id = null,
+            matchStarted = true,
+            matchEnded = false
+        ).toMatchCardModel()
+
+        assertEquals(
+            listOf(
+                DisplayScoreModel("SUR", "245/8", "50", false),
+                DisplayScoreModel("KEN", "203/4", "44.3", true)
+            ),
+            model.scoreRows
+        )
+    }
+
+    @Test
+    fun testShortTeamNameUsesBracketedAbbreviation() {
+        val model = MatchSummary(
+            id = "2",
+            name = "England Women vs India Women",
+            matchType = null,
+            status = null,
+            venue = null,
+            date = null,
+            teams = listOf("England Women [ENG-W]", "India Women"),
+            score = listOf(
+                ScoreSummary(r = 101, w = 2, o = 13.0, inning = "England Women Inning 1")
+            ),
+            series_id = null,
+            matchStarted = true,
+            matchEnded = false
+        ).toMatchCardModel()
+
+        assertEquals("ENG-W", model.scoreRows.single().shortTeam)
+    }
 }

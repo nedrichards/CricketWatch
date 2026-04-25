@@ -117,7 +117,7 @@ fun MatchListScreen(
 }
 
 @Composable
-fun MatchCard(match: MatchSummary) {
+fun MatchCard(match: MatchCardModel) {
     Card(
         onClick = { /* No-op for glancing experience */ },
         modifier = Modifier.padding(bottom = 8.dp)
@@ -131,7 +131,7 @@ fun MatchCard(match: MatchSummary) {
                 overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(4.dp))
-            match.displayScoreRows().forEach { score ->
+            match.scoreRows.forEach { score ->
                 ScoreRow(score)
             }
             if (match.status != null) {
@@ -147,7 +147,7 @@ fun MatchCard(match: MatchSummary) {
 }
 
 @Composable
-private fun ScoreRow(score: DisplayScore) {
+private fun ScoreRow(score: DisplayScoreModel) {
     val rowColor = if (score.isBatting) Color.Cyan else Color.White
 
     Row(
@@ -184,55 +184,3 @@ private fun ScoreRow(score: DisplayScore) {
         )
     }
 }
-
-private data class DisplayScore(
-    val shortTeam: String,
-    val score: String,
-    val overs: String,
-    val isBatting: Boolean
-)
-
-private fun MatchSummary.displayScoreRows(): List<DisplayScore> {
-    val scores = score.orEmpty()
-    return scores.mapIndexed { index, score ->
-        val team = score.teamName(teams, index)
-        DisplayScore(
-            shortTeam = team.shortTeamName(),
-            score = "${score.r}/${score.w}",
-            overs = score.o.formatOvers(),
-            isBatting = !matchEnded && matchStarted && index == scores.lastIndex
-        )
-    }
-}
-
-private fun ScoreSummary.teamName(teams: List<String>, index: Int): String {
-    val inningTeam = inning.substringBefore(" Inning").trim()
-    return teams.firstOrNull { team ->
-        inningTeam.equals(team, ignoreCase = true) ||
-            inningTeam.contains(team, ignoreCase = true) ||
-            team.contains(inningTeam, ignoreCase = true)
-    } ?: teams.getOrNull(index) ?: inningTeam
-}
-
-private fun String.shortTeamName(): String {
-    val bracketed = Regex("\\[(.+?)]").find(this)?.groupValues?.getOrNull(1)
-    if (!bracketed.isNullOrBlank()) return bracketed.take(5).uppercase(Locale.getDefault())
-
-    val words = replace(Regex("[^A-Za-z0-9 ]"), " ")
-        .split(Regex("\\s+"))
-        .filter { it.isNotBlank() && !TEAM_STOP_WORDS.contains(it.lowercase(Locale.getDefault())) }
-
-    if (words.isEmpty()) return take(5).uppercase(Locale.getDefault())
-    if (words.size == 1) return words.first().take(3).uppercase(Locale.getDefault())
-    if (words.last().equals("Women", ignoreCase = true)) {
-        return "${words.first().take(3)}W".uppercase(Locale.getDefault())
-    }
-
-    return words.joinToString("") { it.first().uppercaseChar().toString() }
-        .take(5)
-}
-
-private fun Double.formatOvers(): String =
-    if (rem(1.0) == 0.0) toInt().toString() else toString()
-
-private val TEAM_STOP_WORDS = setOf("cricket", "club", "of", "the")
