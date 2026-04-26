@@ -4,12 +4,14 @@ import com.google.gson.annotations.SerializedName
 
 data class MatchListResponse(
     val data: List<MatchSummary>,
-    val status: String
+    val status: String,
+    val reason: String? = null
 )
 
 data class CricScoreResponse(
     val data: List<CricScoreSummary>,
-    val status: String
+    val status: String,
+    val reason: String? = null
 )
 
 data class CricScoreSummary(

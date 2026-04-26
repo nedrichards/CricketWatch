@@ -3,10 +3,13 @@ package com.nedrichards.cricketwatch
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.*
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.wear.compose.material.MaterialTheme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private const val LIVE_REFRESH_INTERVAL_MS = 60_000L
 
@@ -16,21 +19,23 @@ class MainActivity : ComponentActivity() {
         
         val apiKey = BuildConfig.CRICKET_API_KEY
         val repository = CricketRepository(apiKey)
+        val viewModel = ViewModelProvider(
+            this,
+            CricketViewModelFactory(repository)
+        )[CricketViewModel::class.java]
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.loadMatches()
+                while (true) {
+                    delay(LIVE_REFRESH_INTERVAL_MS)
+                    viewModel.loadMatches()
+                }
+            }
+        }
 
         setContent {
             MaterialTheme {
-                val viewModel: CricketViewModel = viewModel(
-                    factory = CricketViewModelFactory(repository)
-                )
-
-                LaunchedEffect(Unit) {
-                    viewModel.loadMatches()
-                    while (true) {
-                        delay(LIVE_REFRESH_INTERVAL_MS)
-                        viewModel.loadMatches()
-                    }
-                }
-
                 MatchListScreen(
                     state = viewModel.uiState.value,
                     onRefresh = { viewModel.loadMatches() }

@@ -104,6 +104,19 @@ fun MatchListScreen(
                                 color = Color.Gray,
                                 modifier = Modifier.padding(top = 4.dp)
                             )
+                            if (state.refreshError != null) {
+                                Text(
+                                    text = "Refresh failed: ${state.refreshError}",
+                                    style = MaterialTheme.typography.caption3,
+                                    color = Color(0xFFFFB300),
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 3,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 4.dp, start = 10.dp, end = 10.dp)
+                                )
+                            }
                         }
                     }
                 }

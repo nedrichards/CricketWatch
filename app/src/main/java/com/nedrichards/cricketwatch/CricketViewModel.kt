@@ -11,7 +11,8 @@ sealed class CricketUiState {
     object Loading : CricketUiState()
     data class Success(
         val matches: List<MatchCardModel>,
-        val lastUpdated: Long = System.currentTimeMillis()
+        val lastUpdated: Long = System.currentTimeMillis(),
+        val refreshError: String? = null
     ) : CricketUiState()
     data class Error(val message: String) : CricketUiState()
 }
@@ -36,11 +37,12 @@ class CricketViewModel(private val repository: CricketRepository) : ViewModel() 
                     .map(MatchSummary::toMatchCardModel)
                 _uiState.value = CricketUiState.Success(
                     matches = matches,
-                    lastUpdated = System.currentTimeMillis()
+                    lastUpdated = System.currentTimeMillis(),
+                    refreshError = null
                 )
             } catch (e: Exception) {
                 _uiState.value = if (previousState is CricketUiState.Success) {
-                    previousState
+                    previousState.copy(refreshError = e.message ?: "Refresh failed")
                 } else {
                     CricketUiState.Error(e.message ?: "Unknown error")
                 }

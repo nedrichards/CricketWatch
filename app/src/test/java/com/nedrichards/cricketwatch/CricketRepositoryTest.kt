@@ -2,7 +2,9 @@ package com.nedrichards.cricketwatch
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
+import kotlinx.coroutines.runBlocking
 
 class CricketRepositoryTest {
 
@@ -175,4 +177,132 @@ class CricketRepositoryTest {
 
         assertEquals("Surrey vs Kent, Vitality Blast", model.title)
     }
+
+    @Test
+    fun testGetRelevantMatchesThrowsWhenBothFeedsFail() = runBlocking {
+        val repo = CricketRepository(
+            apiKey = "fake_key",
+            api = FakeCricketApi(
+                currentMatches = MatchListResponse(
+                    data = emptyList(),
+                    status = "failure",
+                    reason = "hits today exceeded hits limit"
+                ),
+                cricScore = CricScoreResponse(
+                    data = emptyList(),
+                    status = "failure",
+                    reason = "hits today exceeded hits limit"
+                )
+            )
+        )
+
+        try {
+            repo.getRelevantMatches()
+            fail("Expected getRelevantMatches to throw when both feeds fail")
+        } catch (e: IllegalStateException) {
+            assertTrue(e.message!!.contains("Current matches unavailable"))
+            assertTrue(e.message!!.contains("Score feed unavailable"))
+        }
+    }
+
+    @Test
+    fun testGetRelevantMatchesUsesRemainingFeedWhenOneFails() = runBlocking {
+        val api = FakeCricketApi(
+            currentMatches = MatchListResponse(
+                data = emptyList(),
+                status = "failure",
+                reason = "quota exceeded"
+            ),
+            cricScore = CricScoreResponse(
+                data = listOf(
+                    CricScoreSummary(
+                        id = "surrey-1",
+                        name = "Surrey vs Essex, County Championship",
+                        t1 = "Surrey",
+                        t2 = "Essex",
+                        t1s = "192/3 (72)",
+                        t2s = "409/10 (117.1)",
+                        status = "Day 2: Stumps",
+                        ms = "live",
+                        matchType = "test",
+                        series = "County Championship"
+                    )
+                ),
+                status = "success"
+            )
+        )
+        val repo = CricketRepository(
+            apiKey = "fake_key",
+            api = api
+        )
+
+        val matches = repo.getRelevantMatches()
+
+        assertEquals(1, matches.size)
+        assertEquals("surrey-1", matches.single().id)
+        assertEquals(1, api.currentMatchesCalls)
+        assertEquals(1, api.cricScoreCalls)
+    }
+
+    @Test
+    fun testGetRelevantMatchesSkipsScoreFeedWhenPrimaryFeedHasRelevantMatch() = runBlocking {
+        val api = FakeCricketApi(
+            currentMatches = MatchListResponse(
+                data = listOf(
+                    MatchSummary(
+                        id = "surrey-2",
+                        name = "Surrey vs Essex, County Championship",
+                        matchType = "test",
+                        status = "Day 2: Stumps",
+                        venue = "The Oval",
+                        date = "2026-04-26",
+                        teams = listOf("Surrey", "Essex"),
+                        score = listOf(
+                            ScoreSummary(r = 409, w = 10, o = 117.1, inning = "Essex Inning 1"),
+                            ScoreSummary(r = 192, w = 3, o = 72.0, inning = "Surrey Inning 1")
+                        ),
+                        series_id = "series-1",
+                        matchStarted = true,
+                        matchEnded = false
+                    )
+                ),
+                status = "success"
+            ),
+            cricScore = CricScoreResponse(
+                data = emptyList(),
+                status = "success"
+            )
+        )
+        val repo = CricketRepository(
+            apiKey = "fake_key",
+            api = api
+        )
+
+        val matches = repo.getRelevantMatches()
+
+        assertEquals(1, matches.size)
+        assertEquals("surrey-2", matches.single().id)
+        assertEquals(1, api.currentMatchesCalls)
+        assertEquals(0, api.cricScoreCalls)
+    }
+}
+
+private class FakeCricketApi(
+    private val currentMatches: MatchListResponse,
+    private val cricScore: CricScoreResponse
+) : CricketApi {
+    var currentMatchesCalls: Int = 0
+        private set
+    var cricScoreCalls: Int = 0
+        private set
+
+    override suspend fun getCurrentMatches(apiKey: String): MatchListResponse = currentMatches
+        .also { currentMatchesCalls++ }
+
+    override suspend fun getMatchInfo(apiKey: String, matchId: String): MatchDetailResponse {
+        throw UnsupportedOperationException("Not used in tests")
+    }
+
+    override suspend fun getCricScore(apiKey: String): CricScoreResponse = cricScore
+        .also { cricScoreCalls++ }
 }
