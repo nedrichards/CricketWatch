@@ -181,16 +181,18 @@ private fun ScoreRow(score: DisplayScoreModel) {
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             textAlign = TextAlign.Start,
-            modifier = Modifier.weight(0.46f)
+            modifier = Modifier.weight(if (score.overs.isBlank()) 0.76f else 0.46f)
         )
-        Text(
-            text = score.overs + if (score.isBatting) "*" else "",
-            style = MaterialTheme.typography.caption2,
-            color = Color.White,
-            fontFamily = FontFamily.Monospace,
-            maxLines = 1,
-            textAlign = TextAlign.End,
-            modifier = Modifier.weight(0.30f)
-        )
+        if (score.overs.isNotBlank()) {
+            Text(
+                text = score.overs + if (score.isBatting) "*" else "",
+                style = MaterialTheme.typography.caption2,
+                color = Color.White,
+                fontFamily = FontFamily.Monospace,
+                maxLines = 1,
+                textAlign = TextAlign.End,
+                modifier = Modifier.weight(0.30f)
+            )
+        }
     }
 }

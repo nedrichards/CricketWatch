@@ -29,16 +29,42 @@ fun MatchSummary.toMatchCardModel(): MatchCardModel =
 
 private fun MatchSummary.buildDisplayScoreRows(): List<DisplayScoreModel> {
     val scores = score.orEmpty()
-    return scores.mapIndexed { index, scoreSummary ->
+    val innings = scores.mapIndexed { index, scoreSummary ->
         val team = scoreSummary.teamName(teams, index)
-        DisplayScoreModel(
-            shortTeam = team.shortTeamName(),
-            score = "${scoreSummary.r}/${scoreSummary.w}",
-            overs = scoreSummary.o.formatOvers(),
-            isBatting = !matchEnded && matchStarted && index == scores.lastIndex
-        )
+        DisplayInning(team, scoreSummary, index)
     }
+    val teamOrder = teams + innings.map { it.team }
+    val hasMultipleInningsForTeam = innings.groupingBy { it.team.lowercase(Locale.getDefault()) }
+        .eachCount()
+        .any { it.value > 1 }
+
+    return teamOrder.distinctBy { it.lowercase(Locale.getDefault()) }
+        .mapNotNull { team ->
+            val teamInnings = innings.filter { it.team.equals(team, ignoreCase = true) }
+            if (teamInnings.isEmpty()) return@mapNotNull null
+            val latestInning = teamInnings.last()
+
+            DisplayScoreModel(
+                shortTeam = team.shortTeamName(),
+                score = teamInnings.joinToString(" & ") { it.scoreSummary.formatScore() },
+                overs = if (hasMultipleInningsForTeam) "" else latestInning.scoreSummary.o.formatOvers(),
+                isBatting = !matchEnded && matchStarted && latestInning.index == innings.last().index
+            )
+        }
 }
+
+private data class DisplayInning(
+    val team: String,
+    val scoreSummary: ScoreSummary,
+    val index: Int
+)
+
+private fun ScoreSummary.formatScore(): String =
+    when {
+        w == 10 -> r.toString()
+        declared || DECLARED_INNING_REGEX.containsMatchIn(inning) -> "$r/${w}d"
+        else -> "$r/$w"
+    }
 
 private fun ScoreSummary.teamName(teams: List<String>, index: Int): String {
     val inningTeam = inning.substringBefore(" Inning").trim()
@@ -110,4 +136,5 @@ private val MATCH_NUMBER_REGEX =
 private val TRAILING_YEAR_REGEX = Regex("""(?:,?\s+)?\b(19|20)\d{2}\b$""")
 private val COMPETITION_SUFFIX_REGEX =
     Regex("""(?i)(?:^|\s+)(division\s+(one|two|three)|north\s+group|south\s+group|group\s+[a-z0-9]+)$""")
+private val DECLARED_INNING_REGEX = Regex("""(?i)\b(d|dec|declared)\b""")
 private val TEAM_STOP_WORDS = setOf("cricket", "club", "of", "the")

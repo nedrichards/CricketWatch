@@ -45,7 +45,8 @@ data class ScoreSummary(
     val r: Int,
     val w: Int,
     val o: Double,
-    val inning: String
+    val inning: String,
+    val declared: Boolean = false
 )
 
 data class MatchDetailResponse(
@@ -59,6 +60,7 @@ data class MatchDetail(
     val status: String?,
     val venue: String?,
     val teams: List<String>,
+    val score: List<ScoreSummary>? = null,
     val scorecard: List<InningDetail>?
 )
 

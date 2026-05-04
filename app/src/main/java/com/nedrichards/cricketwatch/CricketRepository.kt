@@ -2,6 +2,7 @@ package com.nedrichards.cricketwatch
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -22,7 +23,7 @@ class CricketRepository(
         val relevantCurrentMatches = currentMatches.filter(::isRelevantMatch)
 
         if (relevantCurrentMatches.isNotEmpty()) {
-            return@withContext sortMatches(relevantCurrentMatches)
+            return@withContext sortMatches(enrichCurrentMatches(relevantCurrentMatches))
         }
 
         val cricScoreResult = fetchCricScoreMatches()
@@ -88,36 +89,65 @@ class CricketRepository(
         }
     }
 
+    private suspend fun enrichCurrentMatches(matches: List<MatchSummary>): List<MatchSummary> =
+        coroutineScope {
+            matches.map { match ->
+                async { enrichCurrentMatch(match) }
+            }.awaitAll()
+        }
+
+    private suspend fun enrichCurrentMatch(match: MatchSummary): MatchSummary {
+        return try {
+            val response = api.getMatchInfo(apiKey, match.id)
+            val detail = response.data
+            val detailScore = detail.score.orEmpty()
+            val summaryScore = match.score.orEmpty()
+
+            match.copy(
+                status = detail.status ?: match.status,
+                teams = if (detail.teams.isNotEmpty()) detail.teams.map { cleanName(it) } else match.teams,
+                score = if (detailScore.size > summaryScore.size) detailScore else match.score
+            )
+        } catch (_: Exception) {
+            match
+        }
+    }
+
     private fun parseCricScore(
         t1: String,
         t1s: String?,
         t2: String,
         t2s: String?
     ): List<ScoreSummary>? {
-        val scores = mutableListOf<ScoreSummary>()
-        
-        fun parse(team: String, s: String?) {
-            if (s.isNullOrBlank()) return
-            // Example: "181/4 (20)" or "31/1 (9.3)"
-            try {
-                val parts = s.trim().split(" ")
-                val scorePart = parts[0] // "181/4"
-                val overPart = parts.getOrNull(1)?.removeSurrounding("(", ")") // "20"
-                
-                val rw = scorePart.split("/")
-                val r = rw[0].toInt()
-                val w = rw.getOrNull(1)?.toInt() ?: 0
-                val o = overPart?.toDoubleOrNull() ?: 0.0
-                
-                scores.add(ScoreSummary(r, w, o, "${cleanName(team)} Inning 1"))
-            } catch (_: Exception) {
-                // Ignore parsing errors
-            }
+        fun parse(team: String, s: String?): List<ScoreSummary> {
+            if (s.isNullOrBlank()) return emptyList()
+            // Examples: "181/4 (20)", "253/7d (75)", or "181/10 (55) & 31/1 (9.3)".
+            return CRIC_SCORE_REGEX.findAll(s).mapIndexedNotNull { index, match ->
+                val r = match.groupValues[1].toIntOrNull() ?: return@mapIndexedNotNull null
+                val w = match.groupValues[2].toIntOrNull() ?: 0
+                val declared = match.groupValues[3].isNotBlank()
+                val o = match.groupValues[4].toDoubleOrNull() ?: 0.0
+
+                ScoreSummary(
+                    r = r,
+                    w = w,
+                    o = o,
+                    inning = "${cleanName(team)} Inning ${index + 1}",
+                    declared = declared
+                )
+            }.toList()
         }
 
-        parse(t1, t1s)
-        parse(t2, t2s)
-        
+        val team1Scores = parse(t1, t1s)
+        val team2Scores = parse(t2, t2s)
+        val scores = mutableListOf<ScoreSummary>()
+        val maxInnings = maxOf(team1Scores.size, team2Scores.size)
+
+        repeat(maxInnings) { index ->
+            team1Scores.getOrNull(index)?.let(scores::add)
+            team2Scores.getOrNull(index)?.let(scores::add)
+        }
+
         return if (scores.isEmpty()) null else scores
     }
 
@@ -159,6 +189,7 @@ class CricketRepository(
     companion object {
         private val WATCH_TERMS = listOf("england", "surrey")
         private val EXCLUDE_TERMS = listOf("u19", "under-19", "under 19")
+        private val CRIC_SCORE_REGEX = Regex("""(\d+)\s*/\s*(\d+)\s*(d|dec|declared)?\s*(?:\(([\d.]+)\))?""", RegexOption.IGNORE_CASE)
 
         private fun createApi(): CricketApi {
             val httpClient = OkHttpClient.Builder()

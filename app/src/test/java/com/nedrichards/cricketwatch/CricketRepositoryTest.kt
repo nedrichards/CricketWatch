@@ -98,6 +98,58 @@ class CricketRepositoryTest {
     }
 
     @Test
+    fun testMatchCardModelCombinesBothInningsByTeam() {
+        val model = MatchSummary(
+            id = "two-innings",
+            name = "Surrey vs Sussex, County Championship",
+            matchType = "test",
+            status = "Day 3: Surrey lead by 80",
+            venue = null,
+            date = null,
+            teams = listOf("Surrey", "Sussex"),
+            score = listOf(
+                ScoreSummary(r = 210, w = 10, o = 70.0, inning = "Surrey Inning 1"),
+                ScoreSummary(r = 180, w = 10, o = 61.4, inning = "Sussex Inning 1"),
+                ScoreSummary(r = 50, w = 2, o = 18.0, inning = "Surrey Inning 2")
+            ),
+            series_id = null,
+            matchStarted = true,
+            matchEnded = false
+        ).toMatchCardModel()
+
+        assertEquals(
+            listOf(
+                DisplayScoreModel("SUR", "210 & 50/2", "", true),
+                DisplayScoreModel("SUS", "180", "", false)
+            ),
+            model.scoreRows
+        )
+    }
+
+    @Test
+    fun testMatchCardModelMarksDeclaredInningsWithoutShowingAllOutWickets() {
+        val model = MatchSummary(
+            id = "declared",
+            name = "Surrey vs Sussex, County Championship",
+            matchType = "test",
+            status = null,
+            venue = null,
+            date = null,
+            teams = listOf("Surrey", "Sussex"),
+            score = listOf(
+                ScoreSummary(r = 405, w = 7, o = 110.0, inning = "Surrey Inning 1", declared = true),
+                ScoreSummary(r = 120, w = 10, o = 42.2, inning = "Sussex Inning 1")
+            ),
+            series_id = null,
+            matchStarted = true,
+            matchEnded = false
+        ).toMatchCardModel()
+
+        assertEquals("405/7d", model.scoreRows.first().score)
+        assertEquals("120", model.scoreRows.last().score)
+    }
+
+    @Test
     fun testShortTeamNameUsesBracketedAbbreviation() {
         val model = MatchSummary(
             id = "2",
@@ -245,6 +297,113 @@ class CricketRepositoryTest {
     }
 
     @Test
+    fun testCricScoreParsesMultipleAndDeclaredInnings() = runBlocking {
+        val api = FakeCricketApi(
+            currentMatches = MatchListResponse(
+                data = emptyList(),
+                status = "failure",
+                reason = "quota exceeded"
+            ),
+            cricScore = CricScoreResponse(
+                data = listOf(
+                    CricScoreSummary(
+                        id = "surrey-sussex",
+                        name = "Surrey vs Sussex, County Championship",
+                        t1 = "Surrey",
+                        t2 = "Sussex",
+                        t1s = "210/10 (70) & 50/2 (18)",
+                        t2s = "180/7d (61.4)",
+                        status = "Day 3: Surrey lead by 80",
+                        ms = "live",
+                        matchType = "test",
+                        series = "County Championship"
+                    )
+                ),
+                status = "success"
+            )
+        )
+        val repo = CricketRepository(
+            apiKey = "fake_key",
+            api = api
+        )
+
+        val model = repo.getRelevantMatches().single().toMatchCardModel()
+
+        assertEquals(
+            listOf(
+                DisplayScoreModel("SUR", "210 & 50/2", "", true),
+                DisplayScoreModel("SUS", "180/7d", "", false)
+            ),
+            model.scoreRows
+        )
+    }
+
+    @Test
+    fun testGetRelevantMatchesEnrichesIncompleteCurrentScoreFromMatchInfo() = runBlocking {
+        val api = FakeCricketApi(
+            currentMatches = MatchListResponse(
+                data = listOf(
+                    MatchSummary(
+                        id = "surrey-sussex",
+                        name = "Surrey vs Sussex, County Championship",
+                        matchType = "test",
+                        status = "Day 4: 2nd Session - Sussex trail by 23 runs",
+                        venue = "The Oval",
+                        date = "2026-05-04",
+                        teams = listOf("Surrey", "Sussex"),
+                        score = listOf(
+                            ScoreSummary(r = 622, w = 10, o = 158.2, inning = "Surrey Inning 1"),
+                            ScoreSummary(r = 92, w = 5, o = 39.0, inning = "Sussex Inning 2")
+                        ),
+                        series_id = "series-1",
+                        matchStarted = true,
+                        matchEnded = false
+                    )
+                ),
+                status = "success"
+            ),
+            cricScore = CricScoreResponse(
+                data = emptyList(),
+                status = "success"
+            ),
+            matchInfo = mapOf(
+                "surrey-sussex" to MatchDetailResponse(
+                    data = MatchDetail(
+                        id = "surrey-sussex",
+                        name = "Surrey vs Sussex, County Championship",
+                        status = "Day 4: 2nd Session - Sussex trail by 23 runs",
+                        venue = "The Oval",
+                        teams = listOf("Surrey", "Sussex"),
+                        score = listOf(
+                            ScoreSummary(r = 622, w = 10, o = 158.2, inning = "Surrey Inning 1"),
+                            ScoreSummary(r = 158, w = 10, o = 59.2, inning = "Sussex Inning 1"),
+                            ScoreSummary(r = 92, w = 5, o = 39.0, inning = "Sussex Inning 2")
+                        ),
+                        scorecard = null
+                    ),
+                    status = "success"
+                )
+            )
+        )
+        val repo = CricketRepository(
+            apiKey = "fake_key",
+            api = api
+        )
+
+        val model = repo.getRelevantMatches().single().toMatchCardModel()
+
+        assertEquals(
+            listOf(
+                DisplayScoreModel("SUR", "622", "", false),
+                DisplayScoreModel("SUS", "158 & 92/5", "", true)
+            ),
+            model.scoreRows
+        )
+        assertEquals(1, api.matchInfoCalls)
+        assertEquals(0, api.cricScoreCalls)
+    }
+
+    @Test
     fun testGetRelevantMatchesSkipsScoreFeedWhenPrimaryFeedHasRelevantMatch() = runBlocking {
         val api = FakeCricketApi(
             currentMatches = MatchListResponse(
@@ -289,18 +448,22 @@ class CricketRepositoryTest {
 
 private class FakeCricketApi(
     private val currentMatches: MatchListResponse,
-    private val cricScore: CricScoreResponse
+    private val cricScore: CricScoreResponse,
+    private val matchInfo: Map<String, MatchDetailResponse> = emptyMap()
 ) : CricketApi {
     var currentMatchesCalls: Int = 0
         private set
     var cricScoreCalls: Int = 0
+        private set
+    var matchInfoCalls: Int = 0
         private set
 
     override suspend fun getCurrentMatches(apiKey: String): MatchListResponse = currentMatches
         .also { currentMatchesCalls++ }
 
     override suspend fun getMatchInfo(apiKey: String, matchId: String): MatchDetailResponse {
-        throw UnsupportedOperationException("Not used in tests")
+        matchInfoCalls++
+        return matchInfo[matchId] ?: throw UnsupportedOperationException("Not used in tests")
     }
 
     override suspend fun getCricScore(apiKey: String): CricScoreResponse = cricScore
