@@ -11,8 +11,6 @@ import androidx.wear.compose.material.MaterialTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private const val LIVE_REFRESH_INTERVAL_MS = 60_000L
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
