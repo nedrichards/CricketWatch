@@ -9,11 +9,11 @@ fail with:
 INSTALL_FAILED_UPDATE_INCOMPATIBLE: Existing package ... signatures do not match newer version
 ```
 
-Use one stable debug keystore for local development builds. For Ned's Android
-projects in this environment, use:
+Use one stable debug keystore for local development builds. In a normal Android
+development environment, use:
 
 ```text
-/var/home/nedr/.android/debug.keystore
+$HOME/.android/debug.keystore
 ```
 
 Its expected SHA-256 fingerprint is:
@@ -25,7 +25,7 @@ Its expected SHA-256 fingerprint is:
 Add these entries to ignored `local.properties`:
 
 ```properties
-androidDebugSigning.storeFile=/var/home/nedr/.android/debug.keystore
+androidDebugSigning.storeFile=$HOME/.android/debug.keystore
 androidDebugSigning.storePassword=android
 androidDebugSigning.keyAlias=androiddebugkey
 androidDebugSigning.keyPassword=android

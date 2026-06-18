@@ -2,7 +2,8 @@
 
 Release signing is optional in local checkouts. If no release signing values are
 present, release builds remain unsigned so development and CI smoke tests can
-still run without private key material.
+still run without private key material unless local debug-signed release testing
+is explicitly enabled.
 
 ## Versioning
 
@@ -30,6 +31,18 @@ The app module reads release signing values from these sources, in order:
 
 All four signing values must be present before the release signing config is
 attached.
+
+## Debug-signed release testing
+
+For local performance testing, a release build can be signed with the debug
+certificate by adding this ignored `local.properties` entry:
+
+```properties
+cricketWatch.debugSignRelease=true
+```
+
+Release signing values still take precedence when present. Do not use a
+debug-signed release artifact for Play upload.
 
 Build a release artifact:
 
