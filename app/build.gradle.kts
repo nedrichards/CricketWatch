@@ -68,7 +68,7 @@ fun configuredFile(path: String): File {
 
 android {
     namespace = "com.nedrichards.cricketwatch"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.nedrichards.cricketwatch"
@@ -139,18 +139,18 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("com.google.android.gms:play-services-wearable:18.1.0")
+    implementation("androidx.core:core-ktx:1.19.1")
+    implementation("com.google.android.gms:play-services-wearable:20.0.1")
     implementation("androidx.percentlayout:percentlayout:1.0.0")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
-    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.recyclerview:recyclerview:1.4.0")
 
-    implementation(platform("androidx.compose:compose-bom:2026.04.01"))
+    implementation(platform("androidx.compose:compose-bom:2026.09.00"))
     
     // Compose for Wear OS
-    implementation("androidx.wear.compose:compose-material:1.6.1")
-    implementation("androidx.wear.compose:compose-foundation:1.6.1")
-    implementation("androidx.wear.compose:compose-navigation:1.6.1")
+    implementation("androidx.wear.compose:compose-material:1.7.0")
+    implementation("androidx.wear.compose:compose-foundation:1.7.0")
+    implementation("androidx.wear.compose:compose-navigation:1.7.0")
     
     // Core Compose
     implementation("androidx.compose.ui:ui")
@@ -159,9 +159,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
     
     // Networking
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.retrofit2:retrofit:3.0.0")
+    implementation("com.squareup.retrofit2:converter-gson:3.0.0")
+    implementation("com.squareup.okhttp3:okhttp:5.5.0")
 
     testImplementation("junit:junit:4.13.2")
 }
