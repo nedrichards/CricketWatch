@@ -139,18 +139,18 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.core:core-ktx:1.19.1")
     implementation("com.google.android.gms:play-services-wearable:18.1.0")
     implementation("androidx.percentlayout:percentlayout:1.0.0")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
-    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.recyclerview:recyclerview:1.4.0")
 
-    implementation(platform("androidx.compose:compose-bom:2026.04.01"))
+    implementation(platform("androidx.compose:compose-bom:2026.09.00"))
     
     // Compose for Wear OS
-    implementation("androidx.wear.compose:compose-material:1.6.1")
-    implementation("androidx.wear.compose:compose-foundation:1.6.1")
-    implementation("androidx.wear.compose:compose-navigation:1.6.1")
+    implementation("androidx.wear.compose:compose-material:1.7.0")
+    implementation("androidx.wear.compose:compose-foundation:1.7.0")
+    implementation("androidx.wear.compose:compose-navigation:1.7.0")
     
     // Core Compose
     implementation("androidx.compose.ui:ui")
