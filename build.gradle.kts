@@ -1,5 +1,9 @@
 // AGP 9.4.1 still requests older vulnerable transitive build-tool dependencies.
 buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
     configurations.classpath {
         resolutionStrategy.force(
             "org.bouncycastle:bcprov-jdk18on:1.85",
@@ -10,10 +14,8 @@ buildscript {
             "org.apache.httpcomponents:httpclient:4.5.14",
         )
     }
-}
-
-plugins {
-    id("com.android.application") version "9.4.1" apply false
-    id("com.android.library") version "9.4.1" apply false
-    id("org.jetbrains.kotlin.plugin.compose") version "2.4.20" apply false
+    dependencies {
+        classpath("com.android.tools.build:gradle:9.4.1")
+        classpath("org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.4.20")
+    }
 }
