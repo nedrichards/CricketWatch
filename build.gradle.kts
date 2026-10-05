@@ -19,3 +19,24 @@ buildscript {
         classpath("org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.4.20")
     }
 }
+
+// AGP also creates project configurations for lint and other build tools.
+// Keep those configurations on the patched versions too.
+allprojects {
+    configurations.configureEach {
+        resolutionStrategy.force(
+            "org.bouncycastle:bcprov-jdk18on:1.85",
+            "org.bouncycastle:bcpkix-jdk18on:1.85",
+            "org.apache.commons:commons-lang3:3.18.0",
+            "org.apache.httpcomponents:httpclient:4.5.14",
+        )
+    }
+    buildscript.configurations.configureEach {
+        resolutionStrategy.force(
+            "org.bouncycastle:bcprov-jdk18on:1.85",
+            "org.bouncycastle:bcpkix-jdk18on:1.85",
+            "org.apache.commons:commons-lang3:3.18.0",
+            "org.apache.httpcomponents:httpclient:4.5.14",
+        )
+    }
+}
