@@ -1,10 +1,9 @@
 import java.io.File
 import java.util.Properties
+import com.android.build.api.dsl.ApplicationExtension
 
-plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.plugin.compose")
-}
+apply(plugin = "com.android.application")
+apply(plugin = "org.jetbrains.kotlin.plugin.compose")
 
 val localProperties = Properties().apply {
     val file = rootProject.file("local.properties")
@@ -66,7 +65,7 @@ fun configuredFile(path: String): File {
     return file(expanded)
 }
 
-android {
+extensions.configure<ApplicationExtension>("android") {
     namespace = "com.nedrichards.cricketwatch"
     compileSdk = 37
 
@@ -139,29 +138,29 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.19.1")
-    implementation("com.google.android.gms:play-services-wearable:20.0.1")
-    implementation("androidx.percentlayout:percentlayout:1.0.0")
-    implementation("androidx.legacy:legacy-support-v4:1.0.0")
-    implementation("androidx.recyclerview:recyclerview:1.4.0")
+    add("implementation", "androidx.core:core-ktx:1.19.1")
+    add("implementation", "com.google.android.gms:play-services-wearable:20.0.1")
+    add("implementation", "androidx.percentlayout:percentlayout:1.0.0")
+    add("implementation", "androidx.legacy:legacy-support-v4:1.0.0")
+    add("implementation", "androidx.recyclerview:recyclerview:1.4.0")
 
-    implementation(platform("androidx.compose:compose-bom:2026.09.00"))
+    add("implementation", platform("androidx.compose:compose-bom:2026.09.00"))
     
     // Compose for Wear OS
-    implementation("androidx.wear.compose:compose-material:1.7.0")
-    implementation("androidx.wear.compose:compose-foundation:1.7.0")
-    implementation("androidx.wear.compose:compose-navigation:1.7.0")
+    add("implementation", "androidx.wear.compose:compose-material:1.7.0")
+    add("implementation", "androidx.wear.compose:compose-foundation:1.7.0")
+    add("implementation", "androidx.wear.compose:compose-navigation:1.7.0")
     
     // Core Compose
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.activity:activity-compose:1.13.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
+    add("implementation", "androidx.compose.ui:ui")
+    add("implementation", "androidx.compose.ui:ui-tooling-preview")
+    add("implementation", "androidx.activity:activity-compose:1.13.0")
+    add("implementation", "androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
     
     // Networking
-    implementation("com.squareup.retrofit2:retrofit:3.0.0")
-    implementation("com.squareup.retrofit2:converter-gson:3.0.0")
-    implementation("com.squareup.okhttp3:okhttp:5.5.0")
+    add("implementation", "com.squareup.retrofit2:retrofit:3.0.0")
+    add("implementation", "com.squareup.retrofit2:converter-gson:3.0.0")
+    add("implementation", "com.squareup.okhttp3:okhttp:5.5.0")
 
-    testImplementation("junit:junit:4.13.2")
+    add("testImplementation", "junit:junit:4.13.2")
 }
